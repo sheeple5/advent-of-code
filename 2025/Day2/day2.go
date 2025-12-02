@@ -26,12 +26,13 @@ func processRange(idRange string, part string) int {
 
 	invalidSum := 0
 	for id := firstID; id <= secondID; id++ {
-		if part == "PART 1" {
-			if invalidID(id) {
+		switch part {
+		case "PART 1":
+			if mirrorInvalidID(id) {
 				invalidSum += id
 			}
-		} else if part == "PART 2" {
-			if bruteReptitions(id) {
+		case "PART 2":
+			if repetitionInvalidID(id) {
 				invalidSum += id
 			}
 		}
@@ -40,7 +41,7 @@ func processRange(idRange string, part string) int {
 	return invalidSum
 }
 
-func invalidID(id int) bool {
+func mirrorInvalidID(id int) bool {
 	stringID := strconv.Itoa(id)
 
 	if len(stringID)%2 != 0 {
@@ -58,7 +59,7 @@ func invalidID(id int) bool {
 	}
 }
 
-func bruteReptitions(id int) bool {
+func repetitionInvalidID(id int) bool {
 	stringID := strconv.Itoa(id)
 	var sequence string
 
