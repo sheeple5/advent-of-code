@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 )
 
@@ -31,7 +32,6 @@ func findNextRoll(board []string, currentRoll []int) []int {
 			return []int{}
 		}
 
-		// fmt.Printf("%d - %d\n", currentRoll[0], currentRoll[1])
 		index = strings.IndexRune(board[currentRoll[0]][currentRoll[1]+1:], '@')
 
 		if index != -1 {
@@ -66,19 +66,67 @@ func checkInBounds(board []string, currentRoll []int) bool {
 	}
 }
 
+func removeRoll(board []string, currentRoll []int) {
+	currentRow := board[currentRoll[0]]
+	newRow := currentRow[:currentRoll[1]] + string('.') + currentRow[currentRoll[1]+1:]
+	board[currentRoll[0]] = newRow
+}
+
+func initializeRoll(board []string) []int {
+	currentRoll := make([]int, 2)
+	if board[0][0] == '@' {
+		currentRoll[0] = 0
+		currentRoll[1] = 0
+	} else {
+		firstRoll := findNextRoll(board, []int{0, 0})
+		currentRoll[0] = firstRoll[0]
+		currentRoll[1] = firstRoll[1]
+	}
+	return currentRoll
+}
+
+func copyBoard(board []string) []string {
+	newBoard := make([]string, len(board))
+	copy(newBoard, board)
+	return newBoard
+}
+
 func main() {
 	// SETUP
 	board := strings.Split(strings.TrimSpace(getFileInput("day4_input.txt")), "\n")
 
 	// PART 1
 	accessibleRolls := 0
-	currentRoll := findNextRoll(board, []int{0, 0})
+	currentRoll := initializeRoll(board)
+
 	for len(currentRoll) != 0 {
 		if calcAdjRolls(board, currentRoll) < 4 {
 			accessibleRolls += 1
-			fmt.Println(currentRoll)
 		}
 		currentRoll = findNextRoll(board, currentRoll)
 	}
-	fmt.Println(accessibleRolls)
+	fmt.Printf("PART 1 ACCESSIBLE ROLLS: %d\n", accessibleRolls)
+
+	// PART 2
+	accessibleRolls = 0
+	newBoard := copyBoard(board)
+
+	for {
+		currentRoll := initializeRoll(board)
+		for len(currentRoll) != 0 {
+			if calcAdjRolls(board, currentRoll) < 4 {
+				accessibleRolls += 1
+				removeRoll(newBoard, currentRoll)
+			}
+			currentRoll = findNextRoll(board, currentRoll)
+		}
+
+		if slices.Equal(board, newBoard) {
+			break
+		}
+
+		board = copyBoard(newBoard)
+
+	}
+	fmt.Printf("PART 2 ACCESSIBLE ROLLS: %d\n", accessibleRolls)
 }
