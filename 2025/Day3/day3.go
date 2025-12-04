@@ -34,20 +34,37 @@ func findLargestVal(bank string) map[string]int {
 	return largestMap
 }
 
-func getLargestJoltage(bank string) int {
-	largestMap := findLargestVal(bank[:len(bank)-1])
-	secondLargestMap := findLargestVal(bank[largestMap["index"]+1:])
-	stringFirst := strconv.Itoa(largestMap["value"])
-	stringSecond := strconv.Itoa(secondLargestMap["value"])
-	mergedVal, _ := strconv.Atoi(stringFirst + stringSecond)
-	return mergedVal
+func getLargestJoltage(bank string, digits int) int {
+	var constructedVal string
+	digitRange := digits - 1
+	previousIndex := 0
+
+	for range digits {
+		largestMap := findLargestVal(bank[previousIndex : len(bank)-digitRange])
+		previousIndex += largestMap["index"] + 1
+		digitRange -= 1
+		constructedVal += strconv.Itoa(largestMap["value"])
+	}
+
+	largestJoltage, _ := strconv.Atoi(constructedVal)
+	return largestJoltage
 }
 
 func main() {
+	// SETUP
 	banks := strings.Split(getFileInput(("day3_input.txt")), "\n")
+
+	// PART 1
 	totalJoltage := 0
 	for _, bank := range banks[:len(banks)-1] {
-		totalJoltage += getLargestJoltage(bank)
+		totalJoltage += getLargestJoltage(bank, 2)
 	}
 	fmt.Printf("PART 1 TOTAL JOLTAGE: %d\n", totalJoltage)
+
+	// PART 2
+	totalJoltage = 0
+	for _, bank := range banks[:len(banks)-1] {
+		totalJoltage += getLargestJoltage(bank, 12)
+	}
+	fmt.Printf("PART 2 TOTAL JOLTAGE: %d", totalJoltage)
 }
