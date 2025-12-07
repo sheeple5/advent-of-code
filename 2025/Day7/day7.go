@@ -22,6 +22,7 @@ func getFileInput(fileName string) string {
 
 type Beam struct {
 	Location []int
+	Weight   int
 	BeamFuncs
 }
 
@@ -38,8 +39,8 @@ func (beam *Beam) moveBeam(board []string, splitCount *int) any {
 		beam.Location = []int{beam.Location[0] + 1, beam.Location[1]}
 		return nil
 	} else if string(board[beam.Location[0]+1][beam.Location[1]]) == "^" {
-		newBeam := Beam{Location: []int{beam.Location[0] + 1, beam.Location[1] + 1}}
-		beam.Location = []int{beam.Location[0] + 1, beam.Location[1] - 1} // Currently, puzzle input does not have any cases where a split would go off the board
+		newBeam := Beam{Weight: beam.Weight, Location: []int{beam.Location[0] + 1, beam.Location[1] + 1}}
+		beam.Location = []int{beam.Location[0] + 1, beam.Location[1] - 1}
 		*splitCount += 1
 		return newBeam
 	}
@@ -69,28 +70,22 @@ func checkDupes(beams []*Beam) []*Beam {
 		if !slices.Contains(seenLocations, locationString) {
 			newBeams = append(newBeams, beam)
 			seenLocations = append(seenLocations, locationString)
+		} else {
+			index := slices.Index(seenLocations, locationString)
+			newBeams[index].Weight += beam.Weight
 		}
 	}
 	return newBeams
 }
 
-func checkComplete(board []string, beams []*Beam) bool {
-	for _, beam := range beams {
-		if beam.Location[0] != len(board)-1 {
-			return false
-		}
-	}
-	return true
-}
-
 func main() {
 	// SETUP
 	board := strings.Split(strings.TrimSpace(getFileInput("day7_input.txt")), "\n")
-	startLocation := findStart(board)
 
 	// PART 1
 	splitCount := 0
-	beams := []*Beam{{Location: []int{startLocation[0], startLocation[1]}}}
+	startLocation := findStart(board)
+	beams := []*Beam{{Weight: 1, Location: []int{startLocation[0], startLocation[1]}}}
 	var newBeams []*Beam
 
 	for {
@@ -105,9 +100,16 @@ func main() {
 		beams = checkDupes(append(beams, newBeams...))
 		newBeams = newBeams[:0]
 
-		if checkComplete(board, beams) {
+		if beams[0].Location[0] == len(board)-1 {
 			break
 		}
 	}
 	fmt.Printf("PART 1 TOTAL SPLITS: %d\n", splitCount)
+
+	// PART 2
+	totalRealities := 0
+	for _, beam := range beams {
+		totalRealities += beam.Weight
+	}
+	fmt.Printf("PART 2 TOTAL REALITIES: %d\n", totalRealities)
 }
