@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"maps"
 	"math"
 	"os"
 	"sort"
@@ -27,7 +28,6 @@ type Box struct {
 	X       int
 	Y       int
 	Z       int
-	Edges   map[int]float64
 	Circuit int
 }
 
@@ -59,7 +59,7 @@ func main() {
 		yInt, _ := strconv.Atoi(splitCoords[1])
 		zInt, _ := strconv.Atoi(splitCoords[2])
 
-		newBox := Box{ID: i, X: xInt, Y: yInt, Z: zInt, Edges: make(map[int]float64)}
+		newBox := Box{ID: i, X: xInt, Y: yInt, Z: zInt}
 
 		boxes = append(boxes, &newBox)
 		boxMap[i] = &newBox
@@ -71,8 +71,6 @@ func main() {
 	for i := range boxes {
 		for j := i + 1; j < len(boxes); j++ {
 			distance := boxDistance(boxMap[i], boxMap[j])
-			boxMap[i].Edges[j] = distance
-			boxMap[j].Edges[i] = distance
 
 			distanceMap[distance] = fmt.Sprintf("%d-%d", i, j)
 			distances = append(distances, distance)
@@ -123,4 +121,54 @@ func main() {
 
 	finalValue := circutLengths[len(circutLengths)-1] * circutLengths[len(circutLengths)-2] * circutLengths[len(circutLengths)-3]
 	fmt.Printf("PART 1 CIRCUITS VALUE: %d\n", finalValue)
+
+	// PART 2
+	circuitMap = make(map[int]*Circuit)
+	circuitID = 1
+	for _, box := range boxMap {
+		box.Circuit = 0
+	}
+
+	for _, distance := range distances {
+		boxIDs := distanceMap[distance]
+		boxID1, _ := strconv.Atoi(strings.Split(boxIDs, "-")[0])
+		boxID2, _ := strconv.Atoi(strings.Split(boxIDs, "-")[1])
+
+		box1 := boxMap[boxID1]
+		box2 := boxMap[boxID2]
+
+		if box1.Circuit == 0 && box2.Circuit == 0 {
+			newCircuit := Circuit{ID: circuitID, Boxes: []*Box{box1, box2}}
+			box1.Circuit = circuitID
+			box2.Circuit = circuitID
+			circuitMap[circuitID] = &newCircuit
+			circuitID += 1
+		} else if box1.Circuit != 0 && box2.Circuit == 0 {
+			circuit := circuitMap[box1.Circuit]
+			circuit.Boxes = append(circuit.Boxes, box2)
+			box2.Circuit = box1.Circuit
+		} else if box1.Circuit == 0 && box2.Circuit != 0 {
+			circuit := circuitMap[box2.Circuit]
+			circuit.Boxes = append(circuit.Boxes, box1)
+			box1.Circuit = box2.Circuit
+		} else if box1.Circuit != box2.Circuit {
+			circuit1 := circuitMap[box1.Circuit]
+			circuit2 := circuitMap[box2.Circuit]
+			circuit1.Boxes = append(circuit1.Boxes, circuit2.Boxes...)
+
+			updateIDs(circuit2.Boxes, circuit1.ID)
+			delete(circuitMap, circuit2.ID)
+		}
+
+		if len(circuitMap) == 1 {
+			var ID int
+			for val := range maps.Keys(circuitMap) {
+				ID = val
+			}
+			if len(circuitMap[ID].Boxes) == len(boxMap) {
+				fmt.Printf("PART 2 CIRCUITS VALUE: %d\n", box1.X*box2.X)
+				break
+			}
+		}
+	}
 }
