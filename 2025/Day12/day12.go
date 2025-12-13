@@ -83,6 +83,30 @@ func copyPresentBuild(presentBuild [][]int) [][]int {
 	return newPresentBuild
 }
 
+func initializeRegion(tree Tree) [][]int {
+	var regionBuild [][]int
+	for range tree.Region[1] {
+		newRow := make([]int, tree.Region[0])
+		regionBuild = append(regionBuild, newRow)
+	}
+	return regionBuild
+}
+
+func presentsLeft(presents []int) bool {
+	for _, present := range presents {
+		if present > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func canFitPresents(presents []int, region [][]int, presentMap map[int]*Present) bool {
+	if !presentsLeft(presents) {
+		return true
+	}
+}
+
 func main() {
 	// SETUP
 	presentData := strings.Split(getFileInput("day12_input.txt"), "\n")
@@ -116,4 +140,11 @@ func main() {
 	}
 
 	// PART 1
+	totalValid := 0
+	for _, tree := range trees {
+		initialRegion := initializeRegion(*tree)
+		if canFitPresents(tree.PresentTypes, initialRegion, presentMap) {
+			totalValid += 1
+		}
+	}
 }
